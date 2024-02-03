@@ -25,18 +25,18 @@ app.post('/profile', upload.single('avatar'), function (req, res, next) {
    
     res.send("image uploaded")
   })
-app.put('*', async (req,res) => {
+app.put('*',upload.single('avatar'), async (req,res) => {
     let filename = req.path.slice(1)
     console.log(filename)
     console.log(typeof req.body)
   
     try {
         await s3.putObject({
-          Body: JSON.stringify(req.body),
+          Body: req.file,
           Bucket: process.env.BUCKET,
           Key: filename,
         }).promise();
-        res.set('Content-type', 'text/plain');
+        res.set('Content-type', req.file.mimetype);
         res.send('ok').end();
       } catch (error) {
         console.error('Error uploading to S3:', error);
