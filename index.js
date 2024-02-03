@@ -1,5 +1,7 @@
 const express = require("express")
 require('dotenv').config();
+
+const path = require("path")
 const app = express();
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3()
@@ -7,7 +9,7 @@ const bodyParser = require("body-parser")
 const multer = require("multer")
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, './uploads')
+      cb(null, path.join(__dirname,"/uploads"))
     },
     filename: function (req, file, cb) {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
@@ -28,7 +30,7 @@ app.post('/profile', upload.single('avatar'), function (req, res, next) {
   app.put('*', upload.single('avatar'), async (req, res) => {
     let filename = req.path.slice(1);
     console.log(filename);
-    console.log(typeof req.body);
+    console.log(req.file.buffer);
 
     try {
         await s3.putObject({
