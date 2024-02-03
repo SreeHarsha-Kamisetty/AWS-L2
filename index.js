@@ -19,9 +19,9 @@ const multer = require("multer")
 const storage = multer.memoryStorage();
   const upload = multer({ storage: storage })
 
-app.get("/",(req,res)=>{
-    res.send("home")
-})
+// app.get("/",(req,res)=>{
+//     res.send("home")
+// })
 
 // app.post('/profile', upload.single('avatar'), function (req, res, next) {
    
@@ -45,6 +45,28 @@ app.get("/",(req,res)=>{
         res.status(500).send('Internal Server Error').end();
     }
 });     
+
+app.get('*', async (req,res) => {
+    let filename = req.path.slice(1)
+  
+    try {
+      let s3File = await s3.getObject({
+        Bucket: process.env.BUCKET,
+        Key: filename,
+      }).promise()
+  
+      res.set('Content-type', s3File.ContentType)
+      res.send(s3File.Body.toString()).end()
+    } catch (error) {
+      if (error.code === 'NoSuchKey') {
+        console.log(`No such key ${filename}`)
+        res.sendStatus(404).end()
+      } else {
+        console.log(error)
+        res.sendStatus(500).end()
+      }
+    }
+  })
 const PORT = process.env.PORT || 8080;
 app.listen(PORT,()=>{
     console.log(`Server running at http://localhost:${PORT}`)
