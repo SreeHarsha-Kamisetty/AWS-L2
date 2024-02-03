@@ -25,24 +25,24 @@ app.post('/profile', upload.single('avatar'), function (req, res, next) {
    
     res.send("image uploaded")
   })
-app.put('*',upload.single('avatar'), async (req,res) => {
-    let filename = req.path.slice(1)
-    console.log(filename)
-    console.log(typeof req.body)
-  
+  app.put('*', upload.single('avatar'), async (req, res) => {
+    let filename = req.path.slice(1);
+    console.log(filename);
+    console.log(typeof req.body);
+
     try {
         await s3.putObject({
-          Body: req.file,
-          Bucket: process.env.BUCKET,
-          Key: filename,
+            Body: req.file.buffer,
+            Bucket: process.env.BUCKET,
+            Key: filename,
         }).promise();
         res.set('Content-type', req.file.mimetype);
         res.send('ok').end();
-      } catch (error) {
+    } catch (error) {
         console.error('Error uploading to S3:', error);
         res.status(500).send('Internal Server Error').end();
-      }
-    })      
+    }
+});     
 const PORT = process.env.PORT || 8080;
 app.listen(PORT,()=>{
     console.log(`Server running at http://localhost:${PORT}`)
