@@ -51,7 +51,7 @@ app.get('*', async (req,res) => {
   
     try {
       let s3File = await s3.getObject({
-        Bucket: process.env.BUCKET,
+        Bucket:  "cyclic-rich-gray-coypu-kit-eu-west-3",
         Key: filename,
       }).promise()
   
