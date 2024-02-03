@@ -27,7 +27,7 @@ app.post('/profile', upload.single('avatar'), function (req, res, next) {
   })
 app.put('*', async (req,res) => {
     let filename = req.path.slice(1)
-  
+    console.log(filename)
     console.log(typeof req.body)
   
     await s3.putObject({
@@ -39,7 +39,7 @@ app.put('*', async (req,res) => {
     res.set('Content-type', 'text/plain')
     res.send('ok').end()
   })
-
-app.listen(8080,()=>{
-    console.log("Server running at http://localhost:8080")
+const PORT = process.env.PORT || 8080;
+app.listen(PORT,()=>{
+    console.log(`Server running at http://localhost:${PORT}`)
 })
