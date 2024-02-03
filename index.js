@@ -1,72 +1,68 @@
 const express = require('express')
 const app = express()
-const AWS = require("aws-sdk");
+const multer = require('multer');
+const AWS = require('aws-sdk');
+
 require('dotenv').config()
 const s3 = new AWS.S3()
 const bodyParser = require('body-parser');
 
 app.use(bodyParser.json())
 
-// curl -i https://some-app.cyclic.app/myFile.txt
-app.get('*', async (req,res) => {
-  let filename = req.path.slice(1)
+
+// using multer memoryStorage
+const upload = multer({storage:multer.memoryStorage()})
+
+
+app.get('/image/:key', (req, res) => {
+    const key = req.params.key;
+  
+    // Generate a pre-signed URL for the image
+    const params = {
+      Bucket: "cyclic-rich-gray-coypu-kit-eu-west-3",
+      Key: key,
+      Expires: 3600, // URL expiration time in seconds (e.g., 1 hour)
+    };
+  
+    s3.getSignedUrl('getObject', params, (err, url) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).send('Error generating pre-signed URL');
+      }
+      res.setHeader('Content-Disposition', 'inline');
+      // Redirect the client to the pre-signed URL
+      res.send(url);
+    });
+  });
+
+
+app.put('/image/:filename', upload.single('file'), async (req, res) => {
+  let filename = req.params.filename;
+
+  if (!req.file) {
+    res.status(400).send('No file uploaded').end();
+    return;
+  }
 
   try {
-    let s3File = await s3.getObject({
-      Bucket: "cyclic-rich-gray-coypu-kit-eu-west-3",
-      Key: filename,
-    }).promise()
 
-    res.set('Content-type', s3File.ContentType)
-    res.send(s3File.Body.toString()).end()
+      await s3.putObject({
+    Body: req.file.buffer,
+    Bucket: "cyclic-rich-gray-coypu-kit-eu-west-3",
+    Key: filename,
+  }).promise()
+
+  res.set('Content-type', 'multipart/form-data')
+  res.send('ok').end()
   } catch (error) {
-    if (error.code === 'NoSuchKey') {
-      console.log(`No such key ${filename}`)
-      res.sendStatus(404).end()
-    } else {
-      console.log(error)
-      res.sendStatus(500).end()
-    }
+    console.log(error);
+    res.sendStatus(500).end();
   }
-})
+});
 
 
-// curl -i -XPUT --data '{"k1":"value 1", "k2": "value 2"}' -H 'Content-type: application/json' http://localhost:3000/myFile.txt
-app.put('*', async (req,res) => {
-  let filename = req.path.slice(1)
 
-  console.log(typeof req.body)
 
-  await s3.putObject({
-    Body: JSON.stringify(req.body),
-    Bucket: "cyclic-rich-gray-coypu-kit-eu-west-3",
-    Key: filename,
-  }).promise()
-
-  res.set('Content-type', 'text/plain')
-  res.send('ok').end()
-})
-
-// curl -i -XDELETE https://some-app.cyclic.app/myFile.txt
-app.delete('*', async (req,res) => {
-  let filename = req.path.slice(1)
-
-  await s3.deleteObject({
-    Bucket: "cyclic-rich-gray-coypu-kit-eu-west-3",
-    Key: filename,
-  }).promise()
-
-  res.set('Content-type', 'text/plain')
-  res.send('ok').end()
-})
-
-// /////////////////////////////////////////////////////////////////////////////
-// Catch all handler for all other request.
-app.use('*', (req,res) => {
-  res.sendStatus(404).end()
-})
-
-// /////////////////////////////////////////////////////////////////////////////
 // Start the server
 const port = process.env.PORT || 3000
 app.listen(port, () => {
