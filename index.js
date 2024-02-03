@@ -30,15 +30,19 @@ app.put('*', async (req,res) => {
     console.log(filename)
     console.log(typeof req.body)
   
-    await s3.putObject({
-      Body: JSON.stringify(req.body),
-      Bucket: process.env.BUCKET,
-      Key: filename,
-    }).promise()
-  
-    res.set('Content-type', 'text/plain')
-    res.send('ok').end()
-  })
+    try {
+        await s3.putObject({
+          Body: JSON.stringify(req.body),
+          Bucket: process.env.BUCKET,
+          Key: filename,
+        }).promise();
+        res.set('Content-type', 'text/plain');
+        res.send('ok').end();
+      } catch (error) {
+        console.error('Error uploading to S3:', error);
+        res.status(500).send('Internal Server Error').end();
+      }
+    })      
 const PORT = process.env.PORT || 8080;
 app.listen(PORT,()=>{
     console.log(`Server running at http://localhost:${PORT}`)
