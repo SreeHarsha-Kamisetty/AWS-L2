@@ -7,27 +7,27 @@ const AWS = require("aws-sdk");
 const s3 = new AWS.S3()
 const bodyParser = require("body-parser")
 const multer = require("multer")
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, "/tmp")
-    },
-    filename: function (req, file, cb) {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-      cb(null, file.originalname)
-    }
-  })
-  
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//       cb(null, "/tmp")
+//     },
+//     filename: function (req, file, cb) {
+//       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+//       cb(null, file.originalname)
+//     }
+//   })
+const storage = multer.memoryStorage();
   const upload = multer({ storage: storage })
 
 app.get("/",(req,res)=>{
     res.send("home")
 })
 
-app.post('/profile', upload.single('avatar'), function (req, res, next) {
+// app.post('/profile', upload.single('avatar'), function (req, res, next) {
    
-    res.send("image uploaded")
-  })
-  app.put('*', upload.single('avatar'), async (req, res) => {
+//     res.send("image uploaded")
+//   })
+  app.post('*', upload.single('avatar'), async (req, res) => {
     let filename = req.path.slice(1);
     console.log(filename);
     console.log(req.file.buffer);
