@@ -35,7 +35,7 @@ app.get("/",(req,res)=>{
     try {
         await s3.putObject({
             Body: req.file.buffer,
-            Bucket: process.env.BUCKET,
+            Bucket: "cyclic-rich-gray-coypu-kit-eu-west-3",
             Key: filename,
         }).promise();
         res.set('Content-type', req.file.mimetype);
